@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <script>
+        function getBase64Image(img) {
+            var canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            var ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+
+            var dataURL = canvas.toDataURL("image/png");
+            return dataURL
+
+            // return dataURL.replace("data:image/png;base64,", "");
+        }
+
+        window.addEventListener("load", function (evt) {
+            var output = document.getElementById("output");
+            var input = document.getElementById("input");
+            var ws;
+            var print = function (message) {
+                var d = document.createElement("div");
+                d.innerHTML = message;
+                output.appendChild(d);
+            };
+            document.getElementById("open").onclick = function (evt) {
+                if (ws) {
+                    return false;
+                }
+                ws = new WebSocket("{{.}}");
+                ws.onopen = function (evt) {
+                    print("OPEN");
+                }
+                ws.onclose = function (evt) {
+                    print("CLOSE");
+                    ws = null;
+                }
+                ws.onmessage = function (evt) {
+                    document.getElementById("mmg").setAttribute("src", evt.data);
+
+                    //console.log("RESPONSE: " + evt.data);
+                }
+                ws.onerror = function (evt) {
+                    print("ERROR: " + evt.data);
+                }
+                return false;
+            };
+            document.getElementById("send").onclick = function (evt) {
+                if (!ws) {
+                    return false;
+                }
+
+                print("SEND: " + input.value);
+
+                for (var i = 1; i <= 6; i++) {
+                    var img = document.getElementById("mmg" + i)
+                    var base64 = getBase64Image(img);
+                    console.log(base64.length);
+                    ws.send(base64);
+                }
+
+                //ws.send(input.value);
+                return false;
+            };
+            document.getElementById("close").onclick = function (evt) {
+                if (!ws) {
+                    return false;
+                }
+                ws.close();
+                return false;
+            };
+
+        });
+    </script>
+</head>
+<body>
+<table>
+    <img src="http://127.0.0.1:8088/img/1.jpg" id="mmg" width="100">
+    <img src="http://127.0.0.1:8088/img/1.jpg" id="mmg1" width="100">
+    <img src="http://127.0.0.1:8088/img/2.jpg" id="mmg2" width="100">
+    <img src="http://127.0.0.1:8088/img/3.jpg" id="mmg3" width="100">
+    <img src="http://127.0.0.1:8088/img/4.jpg" id="mmg4" width="100">
+    <img src="http://127.0.0.1:8088/img/5.jpg" id="mmg5" width="100">
+    <img src="http://127.0.0.1:8088/img/6.jpg" id="mmg6" width="100">
+    <tr>
+        <td valign="top" width="50%">
+            <p>Click "Open" to create a connection to the server,
+                "Send" to send a message to the server and "Close" to close the connection.
+                You can change the message and send multiple times.
+            <p>
+                <form>
+                    <button id="open">Open</button>
+                    <button id="close">Close</button>
+            <p><input id="input" type="text" value="Hello world!">
+                <button id="send">Send</button>
+                </form>
+        </td>
+        <td valign="top" width="50%">
+            <div id="output"></div>
+        </td>
+    </tr>
+</table>
+
+</body>
+<script>
+    function getBase64Image(img) {
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+        var ext = img.src.substring(img.src.lastIndexOf(".") + 1).toLowerCase();
+        var dataURL = canvas.toDataURL("image/" + ext);
+        return dataURL;
+    }
+    var img = "http://127.0.0.1:8088/img/1.jpg";
+    var image = new Image();
+    image.src = img;
+    img.crossOrigin = "*";
+    image.onload = function () {
+        var base64 = getBase64Image(image);
+        console.log(base64);
+    }
+</script>
+</html>
